@@ -16,13 +16,13 @@ class PuppySeeder extends Seeder
      */
     public function run(): void
     {
-        Puppy::factory(10)->create([
-            'breed_id' => Breed::inRandomOrder()->first()->id,
-        ])->each(function ($puppy) {
+        Puppy::factory(10)->afterCreating(function ($puppy) {
             PuppyCare::factory()->create([
                 'puppy_id' => $puppy->id,
                 'care_id' => Care::inRandomOrder()->first()->id,
             ]);
-        });
+        })->create([
+                    'breed_id' => Breed::inRandomOrder()->first()->id,
+                ]);
     }
 }

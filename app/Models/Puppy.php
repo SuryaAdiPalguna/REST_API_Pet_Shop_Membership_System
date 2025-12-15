@@ -31,7 +31,7 @@ class Puppy extends Model
 
     public function puppy_cares()
     {
-        return $this->hasOne(PuppyCare::class);
+        return $this->hasMany(PuppyCare::class);
     }
 
     public function scopeSearch(Builder $query, string $search)

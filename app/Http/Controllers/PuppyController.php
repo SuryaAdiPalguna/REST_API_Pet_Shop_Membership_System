@@ -18,7 +18,7 @@ class PuppyController extends Controller
     public function index()
     {
         try {
-            $puppies = QueryBuilder::for(Puppy::class)->allowedFilters([AllowedFilter::scope('search')])->paginate(10)->appends(request()->query());
+            $puppies = QueryBuilder::for(Puppy::class)->with('puppy_cares')->allowedFilters([AllowedFilter::scope('search')])->paginate(10)->appends(request()->query());
             return response()->json([
                 'success' => true,
                 'puppies' => $puppies->items(),
@@ -90,6 +90,7 @@ class PuppyController extends Controller
     public function show(Puppy $puppy)
     {
         try {
+            $puppy->load(['puppy_cares']);
             return response()->json([
                 'success' => true,
                 'puppy' => $puppy,
