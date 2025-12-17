@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -59,6 +61,13 @@ class User extends Authenticatable
         static::deleting(function (User $user) {
             if ($user->image)
                 Storage::delete($user->image);
+        });
+    }
+
+    public function scopeRole(Builder $query, string $role)
+    {
+        $query->whereHas('roles', function ($query) use ($role) {
+            $query->where('name', '=', $role);
         });
     }
 

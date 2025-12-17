@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Puppy;
+use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -14,25 +15,54 @@ class PuppyController extends Controller
 {
     /**
      * Display a listing of the resource.
+     * @response array{
+     *   success: bool,
+     *   code: int,
+     *   message: string,
+     *   data: Puppy[],
+     *   meta: array{
+     *     paginate: array{
+     *       size: int,
+     *       total_elements: int,
+     *       total_pages: int,
+     *       number: int
+     *     }
+     *   }
+     * }
      */
+    #[QueryParameter('filter[id]', type: 'string')]
+    #[QueryParameter('filter[breed_id]', type: 'string')]
+    #[QueryParameter('filter[name]', type: 'string')]
+    #[QueryParameter('filter[search]', type: 'string')]
+    #[QueryParameter('include', type: 'string')]
+    #[QueryParameter('paginate', type: 'integer')]
+    #[QueryParameter('sort', type: 'string')]
+    #[QueryParameter('page', type: 'integer')]
     public function index()
     {
         try {
-            $puppies = QueryBuilder::for(Puppy::class)->with('puppy_cares')->allowedFilters([AllowedFilter::scope('search')])->paginate(10)->appends(request()->query());
+            $paginate = request()->integer('paginate', 10);
+            $puppies = QueryBuilder::for(Puppy::class)->allowedFilters(['id', 'breed_id', 'name', AllowedFilter::scope('search')])->allowedIncludes('puppy_cares')->defaultSort('-created_at')->allowedSorts(['name', 'created_at'])->paginate($paginate)->appends(request()->query());
             return response()->json([
                 'success' => true,
-                'puppies' => $puppies->items(),
-                'page' => [
-                    'size' => $puppies->perPage(),
-                    'total_elements' => $puppies->total(),
-                    'total_pages' => $puppies->lastPage(),
-                    'number' => $puppies->currentPage(),
+                'code' => 200,
+                'message' => 'Puppies retrieved successfully!',
+                'data' => $puppies->items(),
+                'meta' => [
+                    'paginate' => [
+                        'size' => $puppies->perPage(),
+                        'total_elements' => $puppies->total(),
+                        'total_pages' => $puppies->lastPage(),
+                        'number' => $puppies->currentPage(),
+                    ],
                 ],
             ]);
         } catch (Throwable $error) {
             return response()->json([
                 'success' => false,
-                'message' => $error->getMessage(),
+                'code' => 500,
+                'message' => 'An unexpected error occurred! Please try again later.',
+                'error' => config('app.debug') ? $error->getMessage() : null,
             ], 500);
         }
     }
@@ -62,6 +92,8 @@ class PuppyController extends Controller
             if ($validator->fails())
                 return response()->json([
                     'success' => false,
+                    'code' => 422,
+                    'message' => 'Validation failed! Please check the input fields.',
                     'errors' => $validator->errors()
                 ], 422);
             $validatedData = $validator->validated();
@@ -74,12 +106,15 @@ class PuppyController extends Controller
             DB::commit();
             return response()->json([
                 'success' => true,
+                'code' => 201,
                 'message' => 'New puppy has been stored!',
             ], 201);
         } catch (Throwable $error) {
             return response()->json([
                 'success' => false,
-                'message' => $error->getMessage(),
+                'code' => 500,
+                'message' => 'An unexpected error occurred! Please try again later.',
+                'error' => config('app.debug') ? $error->getMessage() : null,
             ], 500);
         }
     }
@@ -93,12 +128,16 @@ class PuppyController extends Controller
             $puppy->load(['puppy_cares']);
             return response()->json([
                 'success' => true,
-                'puppy' => $puppy,
+                'code' => 200,
+                'message' => 'Member retrieved successfully!',
+                'data' => QueryBuilder::for(Puppy::class)->allowedIncludes('puppy_cares')->where('id', '=', $puppy->id)->firstOrFail(),
             ]);
         } catch (Throwable $error) {
             return response()->json([
                 'success' => false,
-                'message' => $error->getMessage(),
+                'code' => 500,
+                'message' => 'An unexpected error occurred! Please try again later.',
+                'error' => config('app.debug') ? $error->getMessage() : null,
             ], 500);
         }
     }
@@ -128,6 +167,8 @@ class PuppyController extends Controller
             if ($validator->fails())
                 return response()->json([
                     'success' => false,
+                    'code' => 422,
+                    'message' => 'Validation failed! Please check the input fields.',
                     'errors' => $validator->errors()
                 ], 422);
             $validatedData = $validator->validated();
@@ -143,12 +184,15 @@ class PuppyController extends Controller
             DB::commit();
             return response()->json([
                 'success' => true,
+                'code' => 200,
                 'message' => 'Puppy has been updated!',
             ]);
         } catch (Throwable $error) {
             return response()->json([
                 'success' => false,
-                'message' => $error->getMessage(),
+                'code' => 500,
+                'message' => 'An unexpected error occurred! Please try again later.',
+                'error' => config('app.debug') ? $error->getMessage() : null,
             ], 500);
         }
     }
@@ -162,12 +206,15 @@ class PuppyController extends Controller
             $puppy->delete();
             return response()->json([
                 'success' => true,
+                'code' => 200,
                 'message' => 'Puppy has been deleted!',
             ]);
         } catch (Throwable $error) {
             return response()->json([
                 'success' => false,
-                'message' => $error->getMessage(),
+                'code' => 500,
+                'message' => 'An unexpected error occurred! Please try again later.',
+                'error' => config('app.debug') ? $error->getMessage() : null,
             ], 500);
         }
     }

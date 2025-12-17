@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Dedoc\Scramble\Attributes\QueryParameter;
+use Dedoc\Scramble\Attributes\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use Throwable;
 
@@ -13,25 +16,56 @@ class UserController extends Controller
 {
     /**
      * Display a listing of the resource.
+     * @response array{
+     *   success: bool,
+     *   code: int,
+     *   message: string,
+     *   data: User[],
+     *   meta: array{
+     *     paginate: array{
+     *       size: int,
+     *       total_elements: int,
+     *       total_pages: int,
+     *       number: int
+     *     }
+     *   }
+     * }
      */
+    #[QueryParameter('filter[id]', type: 'integer')]
+    #[QueryParameter('filter[name]', type: 'string')]
+    #[QueryParameter('filter[phone]', type: 'string')]
+    #[QueryParameter('filter[username]', type: 'string')]
+    #[QueryParameter('filter[email]', type: 'string')]
+    #[QueryParameter('filter[role]', type: 'string')]
+    #[QueryParameter('include', type: 'string')]
+    #[QueryParameter('paginate', type: 'integer')]
+    #[QueryParameter('sort', type: 'string')]
+    #[QueryParameter('page', type: 'integer')]
     public function index()
     {
         try {
-            $users = QueryBuilder::for(User::class)->allowedFilters([])->paginate(10)->appends(request()->query());
+            $paginate = request()->integer('paginate', 10);
+            $users = QueryBuilder::for(User::class)->allowedFilters(['id', 'name', 'phone', 'username', 'email', AllowedFilter::scope('role')])->allowedIncludes('roles.permissions')->defaultSort('-created_at')->allowedSorts(['name', 'phone', 'email', 'created_at'])->paginate($paginate)->appends(request()->query());
             return response()->json([
                 'success' => true,
-                'users' => $users->items(),
-                'page' => [
-                    'size' => $users->perPage(),
-                    'total_elements' => $users->total(),
-                    'total_pages' => $users->lastPage(),
-                    'number' => $users->currentPage(),
+                'code' => 200,
+                'message' => 'Users retrieved successfully!',
+                'data' => $users->items(),
+                'meta' => [
+                    'paginate' => [
+                        'size' => $users->perPage(),
+                        'total_elements' => $users->total(),
+                        'total_pages' => $users->lastPage(),
+                        'number' => $users->currentPage(),
+                    ],
                 ],
             ]);
         } catch (Throwable $error) {
             return response()->json([
                 'success' => false,
-                'message' => $error->getMessage(),
+                'code' => 500,
+                'message' => 'An unexpected error occurred! Please try again later.',
+                'error' => config('app.debug') ? $error->getMessage() : null,
             ], 500);
         }
     }
@@ -61,20 +95,26 @@ class UserController extends Controller
             if ($validator->fails())
                 return response()->json([
                     'success' => false,
+                    'code' => 422,
+                    'message' => 'Validation failed! Please check the input fields.',
                     'errors' => $validator->errors()
                 ], 422);
             $validatedData = $validator->validated();
             $validatedData['password'] = Hash::make($validatedData['password']);
             unset($validatedData['password_confirmation']);
-            User::create($validatedData);
+            $user = User::create($validatedData);
+            $user->assignRole('admin');
             return response()->json([
                 'success' => true,
+                'code' => 201,
                 'message' => 'New user has been stored!',
             ], 201);
         } catch (Throwable $error) {
             return response()->json([
                 'success' => false,
-                'message' => $error->getMessage(),
+                'code' => 500,
+                'message' => 'An unexpected error occurred! Please try again later.',
+                'error' => config('app.debug') ? $error->getMessage() : null,
             ], 500);
         }
     }
@@ -82,17 +122,22 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
+    #[QueryParameter('include', type: 'string')]
     public function show(User $user)
     {
         try {
             return response()->json([
                 'success' => true,
-                'user' => $user,
+                'code' => 200,
+                'message' => 'User retrieved successfully!',
+                'data' => QueryBuilder::for(User::class)->allowedIncludes('roles.permissions')->where('id', '=', $user->id)->firstOrFail(),
             ]);
         } catch (Throwable $error) {
             return response()->json([
                 'success' => false,
-                'message' => $error->getMessage(),
+                'code' => 500,
+                'message' => 'An unexpected error occurred! Please try again later.',
+                'error' => config('app.debug') ? $error->getMessage() : null,
             ], 500);
         }
     }
@@ -123,6 +168,8 @@ class UserController extends Controller
             if ($validator->fails())
                 return response()->json([
                     'success' => false,
+                    'code' => 422,
+                    'message' => 'Validation failed! Please check the input fields.',
                     'errors' => $validator->errors()
                 ], 422);
             $validatedData = $validator->validated();
@@ -132,12 +179,15 @@ class UserController extends Controller
             $user->update($validatedData);
             return response()->json([
                 'success' => true,
+                'code' => 200,
                 'message' => 'User has been updated!',
             ]);
         } catch (Throwable $error) {
             return response()->json([
                 'success' => false,
-                'message' => $error->getMessage(),
+                'code' => 500,
+                'message' => 'An unexpected error occurred! Please try again later.',
+                'error' => config('app.debug') ? $error->getMessage() : null,
             ], 500);
         }
     }
@@ -151,12 +201,15 @@ class UserController extends Controller
             $user->delete();
             return response()->json([
                 'success' => true,
+                'code' => 200,
                 'message' => 'User has been deleted!',
             ]);
         } catch (Throwable $error) {
             return response()->json([
                 'success' => false,
-                'message' => $error->getMessage(),
+                'code' => 500,
+                'message' => 'An unexpected error occurred! Please try again later.',
+                'error' => config('app.debug') ? $error->getMessage() : null,
             ], 500);
         }
     }

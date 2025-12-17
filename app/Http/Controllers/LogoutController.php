@@ -32,12 +32,15 @@ class LogoutController extends Controller
             $request->user()->currentAccessToken()->delete();
             return response()->json([
                 'success' => true,
+                'code' => 200,
                 'message' => 'Logout successful!',
             ]);
         } catch (Throwable $error) {
             return response()->json([
                 'success' => false,
-                'message' => $error->getMessage(),
+                'code' => 500,
+                'message' => 'An unexpected error occurred! Please try again later.',
+                'error' => config('app.debug') ? $error->getMessage() : null,
             ], 500);
         }
     }

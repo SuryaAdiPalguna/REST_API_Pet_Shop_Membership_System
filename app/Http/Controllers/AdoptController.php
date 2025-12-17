@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Adopt;
+use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -13,25 +14,54 @@ class AdoptController extends Controller
 {
     /**
      * Display a listing of the resource.
+     * @response array{
+     *   success: bool,
+     *   code: int,
+     *   message: string,
+     *   data: Adopt[],
+     *   meta: array{
+     *     paginate: array{
+     *       size: int,
+     *       total_elements: int,
+     *       total_pages: int,
+     *       number: int
+     *     }
+     *   }
+     * }
      */
+    #[QueryParameter('filter[id]', type: 'string')]
+    #[QueryParameter('filter[member_id]', type: 'string')]
+    #[QueryParameter('filter[puppy_id]', type: 'string')]
+    #[QueryParameter('filter[search]', type: 'string')]
+    #[QueryParameter('include', type: 'string')]
+    #[QueryParameter('paginate', type: 'integer')]
+    #[QueryParameter('sort', type: 'string')]
+    #[QueryParameter('page', type: 'integer')]
     public function index()
     {
         try {
-            $adopts = QueryBuilder::for(Adopt::class)->allowedFilters([AllowedFilter::scope('search')])->paginate(10)->appends(request()->query());
+            $paginate = request()->integer('paginate', 10);
+            $adopts = QueryBuilder::for(Adopt::class)->allowedFilters(['id', 'member_id', 'puppy_id', AllowedFilter::scope('search')])->allowedIncludes('puppy.puppy_cares')->defaultSort('-created_at')->allowedSorts('created_at')->paginate($paginate)->appends(request()->query());
             return response()->json([
                 'success' => true,
-                'adopts' => $adopts->items(),
-                'page' => [
-                    'size' => $adopts->perPage(),
-                    'total_elements' => $adopts->total(),
-                    'total_pages' => $adopts->lastPage(),
-                    'number' => $adopts->currentPage(),
+                'code' => 200,
+                'message' => 'Adopts retrieved successfully!',
+                'data' => $adopts->items(),
+                'meta' => [
+                    'paginate' => [
+                        'size' => $adopts->perPage(),
+                        'total_elements' => $adopts->total(),
+                        'total_pages' => $adopts->lastPage(),
+                        'number' => $adopts->currentPage(),
+                    ],
                 ],
             ]);
         } catch (Throwable $error) {
             return response()->json([
                 'success' => false,
-                'message' => $error->getMessage(),
+                'code' => 500,
+                'message' => 'An unexpected error occurred! Please try again later.',
+                'error' => config('app.debug') ? $error->getMessage() : null,
             ], 500);
         }
     }
@@ -59,18 +89,23 @@ class AdoptController extends Controller
             if ($validator->fails())
                 return response()->json([
                     'success' => false,
+                    'code' => 422,
+                    'message' => 'Validation failed! Please check the input fields.',
                     'errors' => $validator->errors()
                 ], 422);
             $validatedData = $validator->validated();
             Adopt::create($validatedData);
             return response()->json([
                 'success' => true,
+                'code' => 201,
                 'message' => 'New adopt has been stored!',
             ], 201);
         } catch (Throwable $error) {
             return response()->json([
                 'success' => false,
-                'message' => $error->getMessage(),
+                'code' => 500,
+                'message' => 'An unexpected error occurred! Please try again later.',
+                'error' => config('app.debug') ? $error->getMessage() : null,
             ], 500);
         }
     }
@@ -83,12 +118,16 @@ class AdoptController extends Controller
         try {
             return response()->json([
                 'success' => true,
-                'adopt' => $adopt,
+                'code' => 200,
+                'message' => 'Adopt retrieved successfully!',
+                'data' => QueryBuilder::for(Adopt::class)->allowedIncludes('puppy.puppy_cares')->where('id', '=', $adopt->id)->firstOrFail(),
             ]);
         } catch (Throwable $error) {
             return response()->json([
                 'success' => false,
-                'message' => $error->getMessage(),
+                'code' => 500,
+                'message' => 'An unexpected error occurred! Please try again later.',
+                'error' => config('app.debug') ? $error->getMessage() : null,
             ], 500);
         }
     }
@@ -118,12 +157,15 @@ class AdoptController extends Controller
             $adopt->delete();
             return response()->json([
                 'success' => true,
+                'code' => 200,
                 'message' => 'Adopt has been deleted!',
             ]);
         } catch (Throwable $error) {
             return response()->json([
                 'success' => false,
-                'message' => $error->getMessage(),
+                'code' => 500,
+                'message' => 'An unexpected error occurred! Please try again later.',
+                'error' => config('app.debug') ? $error->getMessage() : null,
             ], 500);
         }
     }

@@ -40,6 +40,8 @@ class LoginController extends Controller
             if ($validator->fails())
                 return response()->json([
                     'success' => false,
+                    'code' => 422,
+                    'message' => 'Validation failed! Please check the input fields.',
                     'errors' => $validator->errors()
                 ], 422);
             $credentials = $validator->validated();
@@ -47,17 +49,25 @@ class LoginController extends Controller
             if (!$user || !Hash::check($credentials['password'], $user->password))
                 return response()->json([
                     'success' => false,
+                    'code' => 401,
                     'message' => 'Login failed! Please try again.',
                 ], 401);
             $token = $user->createToken('api')->plainTextToken;
             return response()->json([
                 'success' => true,
-                'token' => $token,
+                'code' => 200,
+                'message' => 'Login successful!',
+                'data' => $user,
+                'meta' => [
+                    'token' => $token,
+                ],
             ]);
         } catch (Throwable $error) {
             return response()->json([
                 'success' => false,
-                'message' => $error->getMessage(),
+                'code' => 500,
+                'message' => 'An unexpected error occurred! Please try again later.',
+                'error' => config('app.debug') ? $error->getMessage() : null,
             ], 500);
         }
     }
