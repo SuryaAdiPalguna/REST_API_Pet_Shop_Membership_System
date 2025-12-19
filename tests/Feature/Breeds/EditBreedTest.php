@@ -2,14 +2,17 @@
 
 use App\Models\Breed;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
 test('test edit breed successfully', function () {
-    $user = User::factory()->create();
-    Sanctum::actingAs($user);
+    $this->seed(RolePermissionSeeder::class);
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    Sanctum::actingAs($admin);
     $breed = Breed::factory()->create();
     $response = $this->put("/api/breeds/{$breed->id}", [
         'name' => 'Alaskan Malamute',

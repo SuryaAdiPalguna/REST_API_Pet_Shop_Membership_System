@@ -12,6 +12,15 @@ use Throwable;
 
 class MemberController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:members.index')->only('index');
+        $this->middleware('permission:members.store')->only('store');
+        $this->middleware('permission:members.show')->only('show');
+        $this->middleware('permission:members.update')->only('update');
+        $this->middleware('permission:members.destroy')->only('destroy');
+    }
+
     /**
      * Display a listing of the resource.
      * @response array{
@@ -151,6 +160,7 @@ class MemberController extends Controller
                 'phone' => ['sometimes', 'string', 'min:8', 'max:15'],
                 'email' => ['sometimes', 'email:dns', 'min:8', 'max:255', "unique:members,email,{$member->id},id"],
                 'address' => ['sometimes', 'string'],
+                'is_active' => ['sometimes', 'boolean'],
             ]);
             if ($validator->fails())
                 return response()->json([

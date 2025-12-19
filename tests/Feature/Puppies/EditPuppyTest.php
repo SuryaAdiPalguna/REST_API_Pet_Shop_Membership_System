@@ -4,14 +4,17 @@ use App\Models\Breed;
 use App\Models\Care;
 use App\Models\Puppy;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
 test('test edit puppy successfully', function () {
-    $user = User::factory()->create();
-    Sanctum::actingAs($user);
+    $this->seed(RolePermissionSeeder::class);
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    Sanctum::actingAs($admin);
     $breed = Breed::factory()->create();
     $care = Care::factory()->create();
     $puppy = Puppy::factory()->create();

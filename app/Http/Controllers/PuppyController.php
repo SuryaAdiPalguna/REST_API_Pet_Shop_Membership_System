@@ -13,6 +13,15 @@ use Throwable;
 
 class PuppyController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:puppies.index')->only('index');
+        $this->middleware('permission:puppies.store')->only('store');
+        $this->middleware('permission:puppies.show')->only('show');
+        $this->middleware('permission:puppies.update')->only('update');
+        $this->middleware('permission:puppies.destroy')->only('destroy');
+    }
+
     /**
      * Display a listing of the resource.
      * @response array{

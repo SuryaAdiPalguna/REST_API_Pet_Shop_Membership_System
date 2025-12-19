@@ -12,6 +12,14 @@ use Throwable;
 
 class AdoptController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:adopts.index')->only('index');
+        $this->middleware('permission:adopts.store')->only('store');
+        $this->middleware('permission:adopts.show')->only('show');
+        $this->middleware('permission:adopts.destroy')->only('destroy');
+    }
+
     /**
      * Display a listing of the resource.
      * @response array{

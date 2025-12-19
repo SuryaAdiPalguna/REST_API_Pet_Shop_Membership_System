@@ -16,25 +16,15 @@ class RolePermissionSeeder extends Seeder
     {
         $features = ['users', 'members', 'breeds', 'cares', 'puppies', 'adopts'];
         foreach ($features as $feature) {
-            Permission::create([
-                'name' => "{$feature}.store"
-            ]) && $feature !== 'users';
-            Permission::create([
-                'name' => "{$feature}.update"
-            ]) && $feature !== 'adopts';
-            Permission::create([
-                'name' => "{$feature}.index"
-            ]);
-            Permission::create([
-                'name' => "{$feature}.show"
-            ]);
-            Permission::create([
-                'name' => "{$feature}.destroy"
-            ]);
+            Permission::create(['name' => "{$feature}.store"]) && $feature !== 'users';
+            Permission::create(['name' => "{$feature}.update"]) && $feature !== 'adopts';
+            Permission::create(['name' => "{$feature}.index"]);
+            Permission::create(['name' => "{$feature}.show"]);
+            Permission::create(['name' => "{$feature}.destroy"]);
         }
-        $admin = Role::create([
-            'name' => 'admin'
-        ]);
-        $admin->syncPermissions(Permission::all());
+        $superadmin = Role::create(['name' => 'superadmin']);
+        $superadmin->syncPermissions(Permission::all());
+        $admin = Role::create(['name' => 'admin']);
+        $admin->syncPermissions(Permission::whereNotIn('name', ['users.index', 'users.destroy'])->get());
     }
 }

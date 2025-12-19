@@ -10,6 +10,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -18,6 +20,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
     use HasRoles;
     use HasApiTokens;
+    use LogsActivity;
 
     /**
      * The attributes that are mass assignable.
@@ -61,6 +64,13 @@ class User extends Authenticatable
         static::deleting(function (User $user) {
             if ($user->image)
                 Storage::delete($user->image);
+        });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()->useLogName('user')->logOnly(['name', 'image', 'phone', 'username', 'email'])->logOnlyDirty()->dontSubmitEmptyLogs()->setDescriptionForEvent(function (string $event_name) {
+            return "User has been {$event_name}";
         });
     }
 

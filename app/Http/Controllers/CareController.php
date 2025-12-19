@@ -12,6 +12,15 @@ use Throwable;
 
 class CareController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:cares.index')->only('index');
+        $this->middleware('permission:cares.store')->only('store');
+        $this->middleware('permission:cares.show')->only('show');
+        $this->middleware('permission:cares.update')->only('update');
+        $this->middleware('permission:cares.destroy')->only('destroy');
+    }
+
     /**
      * Display a listing of the resource.
      * @response array{

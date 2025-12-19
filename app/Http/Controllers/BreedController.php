@@ -12,6 +12,15 @@ use Throwable;
 
 class BreedController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:breeds.index')->only('index');
+        $this->middleware('permission:breeds.store')->only('store');
+        $this->middleware('permission:breeds.show')->only('show');
+        $this->middleware('permission:breeds.update')->only('update');
+        $this->middleware('permission:breeds.destroy')->only('destroy');
+    }
+
     /**
      * Display a listing of the resource.
      * @response array{
