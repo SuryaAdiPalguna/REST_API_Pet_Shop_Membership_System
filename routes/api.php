@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\AdoptController;
 use App\Http\Controllers\BreedController;
 use App\Http\Controllers\CareController;
@@ -16,6 +17,7 @@ Route::resource('/register', UserController::class)->only('store');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::resource('/dashboard', DashboardController::class)->only('index');
+    Route::resource('/activities', ActivityController::class)->only('index');
     Route::resource('/users', UserController::class)->except(['create', 'store', 'edit']);
     Route::resource('/members', MemberController::class)->except(['create', 'edit']);
     Route::resource('/breeds', BreedController::class)->except(['create', 'edit']);
