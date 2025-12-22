@@ -102,12 +102,12 @@ class AdoptController extends Controller
                     'errors' => $validator->errors()
                 ], 422);
             $validatedData = $validator->validated();
-            Adopt::create($validatedData);
+            $adopt = Adopt::create($validatedData);
             return response()->json([
                 'success' => true,
                 'code' => 201,
                 'message' => 'New adopt has been stored!',
-                'data' => $validatedData,
+                'data' => $adopt,
             ], 201);
         } catch (Throwable $error) {
             return response()->json([

@@ -99,12 +99,12 @@ class CareController extends Controller
                     'errors' => $validator->errors(),
                 ], 422);
             $validatedData = $validator->validated();
-            Care::create($validatedData);
+            $care = Care::create($validatedData);
             return response()->json([
                 'success' => true,
                 'code' => 201,
                 'message' => 'New care has been stored!',
-                'data' => $validatedData,
+                'data' => $care,
             ], 201);
         } catch (Throwable $error) {
             return response()->json([
@@ -169,7 +169,7 @@ class CareController extends Controller
                 'success' => true,
                 'code' => 200,
                 'message' => 'Care has been updated!',
-                'data' => $validatedData,
+                'data' => $care,
             ]);
         } catch (Throwable $error) {
             return response()->json([

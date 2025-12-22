@@ -112,12 +112,11 @@ class UserController extends Controller
             unset($validatedData['password_confirmation']);
             $user = User::create($validatedData);
             $user->assignRole('admin');
-            unset($validatedData['password']);
             return response()->json([
                 'success' => true,
                 'code' => 201,
                 'message' => 'New user has been stored!',
-                'data' => $validatedData,
+                'data' => $user,
             ], 201);
         } catch (Throwable $error) {
             return response()->json([
@@ -187,12 +186,11 @@ class UserController extends Controller
                 $validatedData['password'] = Hash::make($validatedData['password']);
             unset($validatedData['password_confirmation']);
             $user->update($validatedData);
-            unset($validatedData['password']);
             return response()->json([
                 'success' => true,
                 'code' => 200,
                 'message' => 'User has been updated!',
-                'data' => $validatedData,
+                'data' => $user,
             ]);
         } catch (Throwable $error) {
             return response()->json([

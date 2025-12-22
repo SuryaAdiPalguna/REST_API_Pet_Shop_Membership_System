@@ -103,12 +103,12 @@ class MemberController extends Controller
                     'errors' => $validator->errors()
                 ], 422);
             $validatedData = $validator->validated();
-            Member::create($validatedData);
+            $member = Member::create($validatedData);
             return response()->json([
                 'success' => true,
                 'code' => 200,
                 'message' => 'New member has been stored!',
-                'data' => $validatedData,
+                'data' => $member,
             ], 201);
         } catch (Throwable $error) {
             return response()->json([
@@ -176,7 +176,7 @@ class MemberController extends Controller
                 'success' => true,
                 'code' => 200,
                 'message' => 'Member has been updated!',
-                'data' => $validatedData,
+                'data' => $member,
             ]);
         } catch (Throwable $error) {
             return response()->json([

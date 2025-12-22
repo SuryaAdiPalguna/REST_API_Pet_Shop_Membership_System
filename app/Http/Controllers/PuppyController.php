@@ -117,7 +117,7 @@ class PuppyController extends Controller
                 'success' => true,
                 'code' => 201,
                 'message' => 'New puppy has been stored!',
-                'data' => $validatedData,
+                'data' => $puppy,
             ], 201);
         } catch (Throwable $error) {
             return response()->json([
@@ -196,7 +196,7 @@ class PuppyController extends Controller
                 'success' => true,
                 'code' => 200,
                 'message' => 'Puppy has been updated!',
-                'data' => $validatedData,
+                'data' => $puppy,
             ]);
         } catch (Throwable $error) {
             return response()->json([
