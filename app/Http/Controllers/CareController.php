@@ -104,6 +104,7 @@ class CareController extends Controller
                 'success' => true,
                 'code' => 201,
                 'message' => 'New care has been stored!',
+                'data' => $validatedData,
             ], 201);
         } catch (Throwable $error) {
             return response()->json([
@@ -168,6 +169,7 @@ class CareController extends Controller
                 'success' => true,
                 'code' => 200,
                 'message' => 'Care has been updated!',
+                'data' => $validatedData,
             ]);
         } catch (Throwable $error) {
             return response()->json([

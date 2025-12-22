@@ -107,6 +107,7 @@ class AdoptController extends Controller
                 'success' => true,
                 'code' => 201,
                 'message' => 'New adopt has been stored!',
+                'data' => $validatedData,
             ], 201);
         } catch (Throwable $error) {
             return response()->json([
